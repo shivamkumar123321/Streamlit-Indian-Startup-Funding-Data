@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from streamlit import columns
+from streamlit import columns, pyplot
 import seaborn as sns
 
 st.set_page_config(layout='wide',page_title='StartUp Analysis',page_icon="❤️",initial_sidebar_state="expanded")
@@ -146,9 +146,67 @@ def load_overall_analysis():
         # Display the heatmap in Streamlit
         st.pyplot(fig)
 
-
 def load_investor_analysis():
     st.title('Investor analysis')
+    if investor:
+        st.subheader(investor)
+
+    # Top 5 Recent investment
+    last5_df = df[df['investors'].str.contains(investor)].head()[
+        ['date', 'startup', 'vertical', 'city', 'round', 'amount']]
+    st.subheader('Most Recent Investments')
+    st.dataframe(last5_df)
+
+    col1,col2 = columns([1,2])
+
+    with col1:
+        # Top 5 Biggest investment
+        top_5 = df[df['investors'].str.contains(investor)].groupby('startup')['amount'].sum().sort_values(ascending=False).head()
+        st.subheader('TOP 5 investment')
+        st.dataframe(top_5)
+
+    with col2:
+        pie_graph = st.selectbox('Select one PIE chart', ['Sector', 'Stage', 'City'])
+
+        if pie_graph == 'Sector':
+
+            sector_pie = df[df['investors'].str.contains(investor, na=False)].groupby('vertical')['amount'].sum().sort_values(ascending=False).head(10)
+
+            fig, ax = plt.subplots()
+            ax.pie(sector_pie, labels=sector_pie.index, autopct='%1.1f%%')
+            ax.set_title('Investment in top sector ')
+            st.pyplot(fig)
+
+        elif pie_graph == 'Stage':
+
+            round_pie = df[df['investors'].str.contains(investor, na=False)].groupby('round')[
+                'amount'].sum().sort_values(ascending=False).head(10)
+
+            fig, ax = plt.subplots()
+            ax.pie(round_pie, labels=round_pie.index, autopct='%1.1f%%')
+            ax.set_title('Investment in top stages ')
+            st.pyplot(fig)
+
+        else:
+            city_pie = df[df['investors'].str.contains(investor, na=False)].groupby('city')[
+                'amount'].sum().sort_values(ascending=False).head(10)
+
+            fig, ax = plt.subplots()
+            ax.pie(city_pie, labels=city_pie.index, autopct='%1.1f%%')
+            ax.set_title('Investment in top stages ')
+            st.pyplot(fig)
+
+    st.subheader('YOY Invesment Report')
+
+    df['year'] = df['date'].dt.year
+    yoy_graph = df.groupby('year')['amount'].sum()
+
+    fig1,ax1 = plt.subplots()
+    ax1.plot(yoy_graph.index,yoy_graph.values)
+    ax1.set_title('Year on year Investment in India')
+    ax1.set_xlabel("years")
+    ax1.set_ylabel("amount in CR")
+    st.pyplot(fig1)
 
 def load_startup_analysis():
 
@@ -178,11 +236,13 @@ def load_startup_analysis():
     st.subheader('Funding Round')
     com_detail = df[df['startup'] == name][['date', 'round', 'investors', 'amount']].set_index('date').sort_index()
     st.dataframe(com_detail)
-    
+
     # st.subheader('Competitor')
     # verticle = df[df['startup'] == name]['vertical'].tolist()
     # xx = df[df['vertical'] == verticle]['startup'].unique().tolist()
     # st.metric('Competitor',str(xx))
+
+
 
 st.sidebar.title('Startup Funding Analysis')
 option = st.sidebar.selectbox('Select one',['Overall Analysis','Investor','StartUp'])
