@@ -148,11 +148,41 @@ def load_overall_analysis():
 
 
 def load_investor_analysis():
-    st.subheader('Startup analysis')
+    st.title('Investor analysis')
 
 def load_startup_analysis():
-    st.header('Startup analysis')
 
+    st.title('Startup analysis')
+    st.subheader('Startup Information')
+    colX,colY = st.columns(2)
+
+    with colX:
+        if name:
+            location = df[df['startup'] == name]['city'].tolist()
+            st.metric('name',str(name))
+
+    with colY:
+        st.metric('location',str(location))
+
+    colA, colB = st.columns(2)
+
+    with colA:
+        if name:
+            verticle = df[df['startup'] == name]['vertical'].tolist()
+            st.metric('Verticle', str(verticle))
+
+    with colB:
+        subverticle = df[df['startup'] == name]['subvertical'].tolist()
+        st.metric('Subverticle', str(subverticle))
+
+    st.subheader('Funding Round')
+    com_detail = df[df['startup'] == name][['date', 'round', 'investors', 'amount']].set_index('date').sort_index()
+    st.dataframe(com_detail)
+    
+    # st.subheader('Competitor')
+    # verticle = df[df['startup'] == name]['vertical'].tolist()
+    # xx = df[df['vertical'] == verticle]['startup'].unique().tolist()
+    # st.metric('Competitor',str(xx))
 
 st.sidebar.title('Startup Funding Analysis')
 option = st.sidebar.selectbox('Select one',['Overall Analysis','Investor','StartUp'])
@@ -160,9 +190,11 @@ option = st.sidebar.selectbox('Select one',['Overall Analysis','Investor','Start
 if option == 'Overall Analysis':
     load_overall_analysis()
 elif option == 'Investor':
-    st.sidebar.selectbox('Select Investor name', ['Investor1', 'Investor2', 'Investor3'])
+    investor = st.sidebar.selectbox('Select Investor name', df['investors'])
+    load_investor_analysis()
 else:
-    st.sidebar.selectbox('Select StartUp name', ['Oyo', 'Rapido', 'Ola'])
+    name = st.sidebar.selectbox('Select StartUp name', df['startup'].unique())
+    load_startup_analysis()
 
 
 
